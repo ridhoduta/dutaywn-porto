@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ridho - Full Stack Developer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "on-surface": "#1c1b1b",
+                      "on-secondary-fixed-variant": "#494900",
+                      "on-surface-variant": "#464651",
+                      "tertiary": "#000066",
+                      "on-background": "#1c1b1b",
+                      "on-primary-fixed-variant": "#373d92",
+                      "on-primary-container": "#767cd5",
+                      "outline-variant": "#c7c5d3",
+                      "surface-variant": "#e5e2e1",
+                      "surface": "#ffffff",
+                      "surface-bright": "#ffffff",
+                      "on-tertiary-fixed": "#400201",
+                      "on-secondary-container": "#676811",
+                      "surface-container": "#f0eded",
+                      "on-secondary-fixed": "#1d1d00",
+                      "primary": "#000066",
+                      "background": "#ffffff",
+                      "secondary-fixed": "#e8e884",
+                      "secondary-fixed-dim": "#cbcb6c",
+                      "on-secondary": "#000066",
+                      "primary-fixed-dim": "#bfc2ff",
+                      "on-error": "#ffffff",
+                      "surface-dim": "#dcd9d9",
+                      "surface-container-high": "#eae7e7",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed-dim": "#ffb4a8",
+                      "error": "#ba1a1a",
+                      "surface-container-highest": "#e5e2e1",
+                      "error-container": "#ffdad6",
+                      "secondary": "#FFFF99",
+                      "outline": "#767683",
+                      "primary-container": "#030568",
+                      "inverse-surface": "#313030",
+                      "inverse-on-surface": "#f3f0ef",
+                      "secondary-container": "#FFFF99",
+                      "surface-container-low": "#ffffff",
+                      "on-tertiary-fixed-variant": "#7c2d22",
+                      "tertiary-container": "#400201",
+                      "on-tertiary-container": "#c96759",
+                      "primary-fixed": "#e0e0ff",
+                      "inverse-primary": "#bfc2ff",
+                      "on-primary-fixed": "#030568",
+                      "tertiary-fixed": "#ffdad4",
+                      "surface-tint": "#5056ac"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0px",
+                      "lg": "0px",
+                      "xl": "0px",
+                      "full": "0px"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "margin-mobile": "20px",
+                      "container-max": "1200px",
+                      "section-gap": "120px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "code": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Montserrat"
+                      ],
+                      "display": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "40px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "code": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "12px",
+                              {
+                                      "lineHeight": "1.0",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display": [
+                              "64px",
+                              {
+                                      "lineHeight": "1.1",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-primary font-body-md overflow-x-hidden selection:bg-primary selection:text-secondary">
+<!-- TopNavBar Shared Component -->
+<nav class="fixed w-full top-0 z-50 bg-background border-b-2 border-primary">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto h-20">
+<a class="font-headline-md text-headline-md font-bold text-primary tracking-tighter hover:scale-95 transition-transform" href="#">RIDHO</a>
+<div class="hidden md:flex gap-8">
+<a class="font-headline-md text-headline-md text-primary border-b-2 border-primary pb-1" href="#about">About</a>
+<a class="font-headline-md text-headline-md text-primary/80 hover:text-primary hover:border-b-2 hover:border-primary pb-1 transition-colors" href="#projects">Projects</a>
+<a class="font-headline-md text-headline-md text-primary/80 hover:text-primary hover:border-b-2 hover:border-primary pb-1 transition-colors" href="#experience">Experience</a>
+<a class="font-headline-md text-headline-md text-primary/80 hover:text-primary hover:border-b-2 hover:border-primary pb-1 transition-colors" href="#education">Education</a>
+<a class="font-headline-md text-headline-md text-primary/80 hover:text-primary hover:border-b-2 hover:border-primary pb-1 transition-colors" href="#certifications">Certifications</a>
+</div>
+<a class="hidden md:block px-6 py-3 border-2 border-primary bg-secondary text-primary font-label-caps text-label-caps hover:bg-primary hover:text-secondary transition-all duration-200" href="#contact">
+                Contact Me
+            </a>
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="pt-32 pb-section-gap px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Hero Section -->
+<section class="min-h-[819px] flex flex-col md:flex-row items-center justify-between gap-12 mb-section-gap">
+<div class="w-full md:w-1/2 flex flex-col items-start space-y-6">
+<h1 class="font-display text-display text-primary leading-tight">
+                    Hello, I'm Ridho 👋<br/>
+<span class="text-primary opacity-80">Full Stack Developer</span>
+</h1>
+<p class="font-body-lg text-body-lg text-primary max-w-lg">
+                    Saya membangun website, aplikasi mobile, dan sistem informasi dengan fokus pada performa, skalabilitas, dan pengalaman pengguna yang luar biasa.
+                </p>
+<div class="flex gap-4 pt-4">
+<a class="px-8 py-4 bg-primary text-secondary font-label-caps text-label-caps hover:bg-secondary hover:text-primary border-2 border-primary transition-all shadow-[4px_4px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]" href="#projects">
+                        View Projects
+                    </a>
+<a class="px-8 py-4 bg-secondary text-primary border-2 border-primary font-label-caps text-label-caps hover:bg-primary hover:text-secondary transition-all shadow-[4px_4px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]" href="#">
+                        Download CV
+                    </a>
+</div>
+</div>
+<div class="w-full md:w-1/2 h-[500px] border-4 border-primary relative overflow-hidden bg-secondary flex items-center justify-center shadow-[12px_12px_0px_0px_rgba(0,0,102,1)]">
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#000066 1px, transparent 1px); background-size: 20px 20px;"></div>
+<img class="relative z-10 w-full h-full object-cover grayscale mix-blend-multiply opacity-80" data-alt="A stylized, flat-design illustration of a modern male developer working at a minimal desk setup. The illustration uses a strict palette of deep navy blue (#000066) and soft yellow (#FFFFB3) with crisp, geometric shapes, resembling a blueprint or technical drawing. The developer looks focused, typing on a modern laptop, surrounded by subtle abstract coding symbols in the background. High contrast, sharp edges, clean vector art style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNdN0A0-4z4WnCFfYri40zJuvppWQJ6Qk0btFZ4DwfFbHGpX0r2jvkyROLYVSQDQz7OgTZRvqaSJZU71wkCp9g5S4SEr2W0shm6uN-3iTzvtgcbzdkdp0FlNZWwTZDXnrF2sNxL6sYHe_lPQ6Ow9fGO0FqF8ICysHynVNXZHB5olSQZSligXvkrTZUceEvq1Jn-cE09n5P6kN266qoNtk0NzlfNj3Sg4I291Ed8nUlLQve6P0E7SkP"/>
+</div>
+</section>
+<!-- About Section -->
+<section class="mb-section-gap scroll-mt-32" id="about">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-12 border-b-4 border-secondary pb-4 inline-block">About Me</h2>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+<div class="md:col-span-8 space-y-6 font-body-md text-body-md text-primary">
+<p>
+                        Seorang Full Stack Developer yang berdedikasi tinggi dengan pengalaman dalam merancang, mengembangkan, dan memelihara aplikasi web modern. Saya memiliki ketertarikan yang kuat pada arsitektur perangkat lunak yang bersih, kode yang efisien, dan antarmuka pengguna yang intuitif.
+                    </p>
+<p>
+                        Pendekatan saya terhadap pengembangan selalu berpusat pada pemecahan masalah bisnis nyata melalui teknologi. Saya menikmati tantangan dalam membangun sistem yang kompleks namun menyajikannya dengan cara yang sederhana dan mudah digunakan.
+                    </p>
+</div>
+<div class="md:col-span-4 bg-secondary border-2 border-primary p-6 shadow-[6px_6px_0px_0px_rgba(0,0,102,1)]">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 border-b-2 border-primary pb-2">Quick Info</h3>
+<ul class="space-y-4 font-body-md text-body-md">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">location_on</span>
+<div>
+<strong class="block font-label-caps text-label-caps text-primary">Location</strong>
+                                Malang, Indonesia
+                            </div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">school</span>
+<div>
+<strong class="block font-label-caps text-label-caps text-primary">Education</strong>
+                                Politeknik Negeri Malang
+                            </div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">work</span>
+<div>
+<strong class="block font-label-caps text-label-caps text-primary">Experience</strong>
+                                2+ Years
+                            </div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Skills Section -->
+<section class="mb-section-gap">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-12 border-b-4 border-secondary pb-4 inline-block">Technical Stack</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Frontend -->
+<div class="border-2 border-primary bg-surface p-8 shadow-[8px_8px_0px_0px_rgba(0,0,102,1)] hover:-translate-y-2 transition-transform duration-300 hover:bg-secondary">
+<div class="flex items-center gap-4 mb-6">
+<span class="material-symbols-outlined text-4xl text-primary">desktop_windows</span>
+<h3 class="font-headline-md text-headline-md text-primary">Frontend</h3>
+</div>
+<div class="flex flex-wrap gap-3">
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">React</span>
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">Next.js</span>
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">Tailwind CSS</span>
+<span class="px-4 py-2 bg-surface text-primary font-code text-code border-2 border-primary">TypeScript</span>
+<span class="px-4 py-2 bg-surface text-primary font-code text-code border-2 border-primary">Framer Motion</span>
+</div>
+</div>
+<!-- Backend -->
+<div class="border-2 border-primary bg-surface p-8 shadow-[8px_8px_0px_0px_rgba(0,0,102,1)] hover:-translate-y-2 transition-transform duration-300 hover:bg-secondary">
+<div class="flex items-center gap-4 mb-6">
+<span class="material-symbols-outlined text-4xl text-primary">dns</span>
+<h3 class="font-headline-md text-headline-md text-primary">Backend</h3>
+</div>
+<div class="flex flex-wrap gap-3">
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">Node.js</span>
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">Express</span>
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">Laravel</span>
+<span class="px-4 py-2 bg-surface text-primary font-code text-code border-2 border-primary">REST APIs</span>
+<span class="px-4 py-2 bg-surface text-primary font-code text-code border-2 border-primary">GraphQL</span>
+</div>
+</div>
+<!-- Database -->
+<div class="border-2 border-primary bg-surface p-8 shadow-[8px_8px_0px_0px_rgba(0,0,102,1)] hover:-translate-y-2 transition-transform duration-300 hover:bg-secondary">
+<div class="flex items-center gap-4 mb-6">
+<span class="material-symbols-outlined text-4xl text-primary">database</span>
+<h3 class="font-headline-md text-headline-md text-primary">Database</h3>
+</div>
+<div class="flex flex-wrap gap-3">
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">PostgreSQL</span>
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">MySQL</span>
+<span class="px-4 py-2 bg-primary text-secondary font-code text-code border-2 border-primary">Prisma ORM</span>
+<span class="px-4 py-2 bg-surface text-primary font-code text-code border-2 border-primary">MongoDB</span>
+<span class="px-4 py-2 bg-surface text-primary font-code text-code border-2 border-primary">Redis</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Certifications Section -->
+<section class="mb-section-gap scroll-mt-32" id="certifications">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-12 border-b-4 border-secondary pb-4 inline-block">Certifications</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Cert Card 1 -->
+<div class="border-2 border-primary bg-surface p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_rgba(0,0,102,1)] hover:bg-secondary transition-colors">
+<div><div class="w-20 h-20 mb-4 border-2 border-primary bg-white p-1 shadow-[4px_4px_0px_0px_rgba(0,0,102,1)]"><img alt="AWS Badge" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4Ougu0agOigk3HAh03ge3cqjx3F3EnpGAxQ_RH_GLHxoC3dGvelvqcZ_zM8fgP6lat-3F0lJgD8ba_63Szh8OvTLNVpeTxse9R8dy68f2HgGdFI3y2riNZtrtbO0xRdwHl-pL_wQBWkDJQlNfhNXDJV_v-yEf9YZPcspuOVTI4m4S-UhVvPIiUIq-y-rlNp032GW7Qw0IaxfrclI1wG8mexisHugT37-f7_Jf1E5EQpeliuKD3MXK"/></div>
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-4xl text-primary">workspace_premium</span>
+<span class="font-code text-code text-primary bg-surface border-2 border-primary px-2 py-1">2024-2026</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">AWS Certified Developer - Associate</h3>
+<p class="font-body-md text-body-md text-primary opacity-80 mb-6">Issued by Amazon Web Services</p>
+</div>
+<a class="inline-flex items-center gap-2 font-label-caps text-label-caps text-primary border-b-2 border-primary pb-1 hover:bg-primary hover:text-secondary transition-colors w-fit p-1" href="#">
+                        View Certificate <span class="material-symbols-outlined text-sm">arrow_outward</span>
+</a>
+</div>
+<!-- Cert Card 2 -->
+<div class="border-2 border-primary bg-surface p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_rgba(0,0,102,1)] hover:bg-secondary transition-colors">
+<div><div class="w-20 h-20 mb-4 border-2 border-primary bg-white p-1 shadow-[4px_4px_0px_0px_rgba(0,0,102,1)]"><img alt="Google Cloud Badge" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAn-mDdhveOUUbPkhIlyfFQpwBLym0YaUqoCd6R-6tioFnWoce1PZDddHQaZJhOuBDqiynF4bu5EjbtKOvZQP1M6IOgV9_tV4WRcbg4666nFddobOeBOcgWS_j7GWyEzFXgfT-aTlUmOcURjADLlosW1YTtNu4dS7vo3vpqiGDdb4MInqsRY-xzZXTf1OkRACZj99dNVty2kHRCYzs1xLjGs40mdxUz8UsunHtVtG4BHgcEpZki38Aw"/></div>
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-4xl text-primary">workspace_premium</span>
+<span class="font-code text-code text-primary bg-surface border-2 border-primary px-2 py-1">2023-2025</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Google Associate Cloud Engineer</h3>
+<p class="font-body-md text-body-md text-primary opacity-80 mb-6">Issued by Google Cloud</p>
+</div>
+<a class="inline-flex items-center gap-2 font-label-caps text-label-caps text-primary border-b-2 border-primary pb-1 hover:bg-primary hover:text-secondary transition-colors w-fit p-1" href="#">
+                        View Certificate <span class="material-symbols-outlined text-sm">arrow_outward</span>
+</a>
+</div>
+<!-- Cert Card 3 -->
+<div class="border-2 border-primary bg-surface p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_rgba(0,0,102,1)] hover:bg-secondary transition-colors">
+<div><div class="w-20 h-20 mb-4 border-2 border-primary bg-white p-1 shadow-[4px_4px_0px_0px_rgba(0,0,102,1)]"><img alt="Meta Badge" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_kOfWd1ueqIUd2FPT6XRnG2iYotTXtabpkXm3uyiC5mtwNVvoDG-1WZl8_3MohGpkO3RQqhUfU4PF12oa7vouSV34Y_WwVd3-s2qIY5x_BXz9gXZ36rT0Pv697SL25_4cmxkbCtS-FlTaAkO99eTHR-iHtmFX8DMbikxdRO5JwnqKKCcDp05YnLG-4fCpWKeUyd-yEpVjDs0NosNXzhWx6CVtYtqqCtiTN6i4zBWsamsO8YYRXpEt"/></div>
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-4xl text-primary">workspace_premium</span>
+<span class="font-code text-code text-primary bg-surface border-2 border-primary px-2 py-1">2024</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Meta Front-End Developer Professional Certificate</h3>
+<p class="font-body-md text-body-md text-primary opacity-80 mb-6">Issued by Coursera &amp; Meta</p>
+</div>
+<a class="inline-flex items-center gap-2 font-label-caps text-label-caps text-primary border-b-2 border-primary pb-1 hover:bg-primary hover:text-secondary transition-colors w-fit p-1" href="#">
+                        View Certificate <span class="material-symbols-outlined text-sm">arrow_outward</span>
+</a>
+</div>
+<!-- Cert Card 4 -->
+<div class="border-2 border-primary bg-surface p-6 flex flex-col justify-between shadow-[6px_6px_0px_0px_rgba(0,0,102,1)] hover:bg-secondary transition-colors">
+<div><div class="w-20 h-20 mb-4 border-2 border-primary bg-white p-1 shadow-[4px_4px_0px_0px_rgba(0,0,102,1)]"><img alt="Node.js Badge" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAVBS1BPwMQgZU5zCzSBgqazgPQrkZZE3_y_52qlZZgt44M_sBJs3QEbzRHqXfHj6djI8Z0VYGG5_sbRhNz1IsZ58yGAEND6vW19CVljaMpj5a8BNCVboCDhOETZMOKy_jf3WI29BIuLfiAHM6HaJxaH9LCk6rVpSce2rCgK-O1pRFeNtovoEEgy0xJWdrM8kIB9NoaPUSLCR4mPMeqiXg5OHBUcYMQtUmPLMCZJEj-oMO3yRcYamD"/></div>
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-4xl text-primary">workspace_premium</span>
+<span class="font-code text-code text-primary bg-surface border-2 border-primary px-2 py-1">2023</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Back-End Development with Node.js</h3>
+<p class="font-body-md text-body-md text-primary opacity-80 mb-6">Issued by Dicoding Indonesia</p>
+</div>
+<a class="inline-flex items-center gap-2 font-label-caps text-label-caps text-primary border-b-2 border-primary pb-1 hover:bg-primary hover:text-secondary transition-colors w-fit p-1" href="#">
+                        View Certificate <span class="material-symbols-outlined text-sm">arrow_outward</span>
+</a>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Shared Component -->
+<section class="mb-section-gap scroll-mt-32 py-20" id="projects">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-12 border-b-4 border-secondary pb-4 inline-block">Featured Projects</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Project Card 1 -->
+<div class="border-2 border-primary bg-surface overflow-hidden flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,102,1)] hover:bg-secondary transition-colors group">
+<div class="h-64 overflow-hidden border-b-2 border-primary">
+<img alt="E-Commerce Platform" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGnndHOxQMC9P7kHYR-NCziQOHTYxPNDH6FyixbGFqO_KRMF-t1EUHAmPe6hni1wsTKXjlYA5YbhwHVgT7oPXz8HDqW6dqDoUkilL2QmjAz4zcwjpWUIkmkltP2Js7aE1zKglyU7a4vibtXU1GcvadWQmYAGRCc8CTmIapikW1CSlTDnul-hbI-R2lXBSj7S9vo_SSzOnffaCk07sRyqxgBfPGb-sm33DNXtUqPahSpKe_TNs_helP"/>
+</div>
+<div class="p-8 flex flex-col flex-grow">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">E-Commerce Platform</h3>
+<p class="font-body-md text-body-md text-primary opacity-80 mb-8">A full-stack e-commerce solution with real-time inventory management.</p>
+<div class="mt-auto flex gap-4">
+<span class="px-3 py-1 bg-primary text-secondary font-code text-sm border-2 border-primary">React</span>
+<span class="px-3 py-1 bg-primary text-secondary font-code text-sm border-2 border-primary">Node.js</span>
+</div>
+</div>
+</div>
+<!-- Project Card 2 -->
+<div class="border-2 border-primary bg-surface overflow-hidden flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,102,1)] hover:bg-secondary transition-colors group">
+<div class="h-64 overflow-hidden border-b-2 border-primary">
+<img alt="Mobile Banking App" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyn_2V2u-jGweP-1DaAgdodzyimf4zJFB-z7dTnNVNOP7rNAEsfViIeu5EcUcxU7-Z4ci4LqjKK2sBv86F4puXVDQZi9BZT5E-ZgSeIkOQF5hJYta3QFL9YesUT9Mc6dNo8L2P6sP3QfiyRSgyt-T3Y7KnZ_fZvGdWLravG4oBGcCLlSUVlXaUz7WoT-v-Lhpn9g6N-aRlEOBYc81IGgtKhoz5mqtxNfw_S5rIcIjQAeM0Ag_eW1PZ"/>
+</div>
+<div class="p-8 flex flex-col flex-grow">
+<h3 class="font-headline-md text-headline-md text-primary mb-4">Mobile Banking App</h3>
+<p class="font-body-md text-body-md text-primary opacity-80 mb-8">Secure and intuitive mobile banking experience with biometric authentication.</p>
+<div class="mt-auto flex gap-4">
+<span class="px-3 py-1 bg-primary text-secondary font-code text-sm border-2 border-primary">Flutter</span>
+<span class="px-3 py-1 bg-primary text-secondary font-code text-sm border-2 border-primary">Firebase</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-12 text-center">
+<a class="inline-block px-8 py-4 bg-secondary text-primary border-2 border-primary font-label-caps text-label-caps hover:bg-primary hover:text-secondary transition-all shadow-[4px_4px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px]" href="#">View All Projects</a>
+</div>
+</section>
+<section class="mb-section-gap py-20 bg-secondary border-4 border-primary text-center shadow-[12px_12px_0px_0px_rgba(0,0,102,1)]" id="contact">
+<h2 class="font-display text-headline-lg md:text-display text-primary mb-6">Let's Work Together</h2>
+<p class="font-body-lg text-body-lg text-primary max-w-2xl mx-auto mb-12 px-margin-mobile">
+Have a project in mind? Let's build something great together. I'm currently available for new opportunities and collaborations.
+</p>
+<a class="px-12 py-6 bg-primary text-secondary font-label-caps text-label-caps text-lg hover:bg-secondary hover:text-primary border-2 border-primary transition-all shadow-[6px_6px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-[6px] hover:translate-y-[6px]" href="mailto:hello@ridho.dev">
+Contact Me
+</a>
+</section><footer class="bg-tertiary border-t-2 border-primary w-full mt-auto relative z-50">
+<div class="flex flex-col md:flex-row justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-unit-gutter max-w-container-max mx-auto h-32 md:h-24">
+<div class="font-headline-md text-headline-md text-on-tertiary mb-4 md:mb-0">
+                RIDHO
+            </div>
+<div class="text-on-tertiary opacity-80 font-body-md text-body-md text-center md:text-left mb-4 md:mb-0">
+                © 2024 Ridho. Built with precision.
+            </div>
+<div class="flex gap-6">
+<a class="text-on-tertiary opacity-80 hover:opacity-100 hover:text-secondary transition-colors font-label-caps text-label-caps" href="#">GitHub</a>
+<a class="text-on-tertiary opacity-80 hover:opacity-100 hover:text-secondary transition-colors font-label-caps text-label-caps" href="#">LinkedIn</a>
+<a class="text-on-tertiary opacity-80 hover:opacity-100 hover:text-secondary transition-colors font-label-caps text-label-caps" href="#">Email</a>
+</div>
+</div>
+</footer>
+</body></html>
