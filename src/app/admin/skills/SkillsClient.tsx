@@ -93,7 +93,7 @@ export function SkillsClient({
         }
       } else {
         // Create new skill
-        const { data, error } = await createSkill(formData as any);
+        const { data, error } = await createSkill(formData);
         if (error) {
           setError(error);
         } else if (data) {

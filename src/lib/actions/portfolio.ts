@@ -37,23 +37,74 @@ export async function getProfile(): Promise<ApiResponse<Profile>> {
 }
 
 export async function updateProfile(
+  profile: Partial<Profile>
+): Promise<ApiResponse<Profile>>;
+export async function updateProfile(
   id: number,
   profile: Partial<Profile>
+): Promise<ApiResponse<Profile>>;
+export async function updateProfile(
+  idOrProfile: number | Partial<Profile>,
+  maybeProfile?: Partial<Profile>
 ): Promise<ApiResponse<Profile>> {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(profile)
-      .eq("id", id)
-      .select()
-      .single();
+    let id: number | undefined;
+    let profileData: Partial<Profile>;
 
-    if (error) {
-      return { data: null, error: error.message };
+    if (typeof idOrProfile === "number") {
+      id = idOrProfile;
+      profileData = maybeProfile || {};
+    } else {
+      profileData = idOrProfile;
     }
 
-    return { data, error: null };
+    if (id) {
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(profileData)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) {
+        return { data: null, error: error.message };
+      }
+
+      return { data, error: null };
+    } else {
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .maybeSingle();
+
+      if (existing?.id) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .update(profileData)
+          .eq("id", existing.id)
+          .select()
+          .single();
+
+        if (error) {
+          return { data: null, error: error.message };
+        }
+
+        return { data, error: null };
+      } else {
+        const { data, error } = await supabase
+          .from("profiles")
+          .insert(profileData)
+          .select()
+          .single();
+
+        if (error) {
+          return { data: null, error: error.message };
+        }
+
+        return { data, error: null };
+      }
+    }
   } catch (error) {
     return {
       data: null,
@@ -86,13 +137,19 @@ export async function getSkills(): Promise<ApiResponse<Skill[]>> {
 }
 
 export async function createSkill(
-  skill: Omit<Skill, "id" | "created_at">
+  skill: Omit<Skill, "id" | "created_at" | "display_order"> & {
+    display_order?: number;
+  }
 ): Promise<ApiResponse<Skill>> {
   try {
     const supabase = await createClient();
+    const skillData = {
+      display_order: 0,
+      ...skill,
+    };
     const { data, error } = await supabase
       .from("skills")
-      .insert(skill)
+      .insert(skillData)
       .select()
       .single();
 
@@ -557,13 +614,19 @@ export async function getEducations(): Promise<ApiResponse<Education[]>> {
 }
 
 export async function createEducation(
-  education: Omit<Education, "id" | "created_at">
+  education: Omit<Education, "id" | "created_at" | "display_order"> & {
+    display_order?: number;
+  }
 ): Promise<ApiResponse<Education>> {
   try {
     const supabase = await createClient();
+    const educationData = {
+      display_order: 0,
+      ...education,
+    };
     const { data, error } = await supabase
       .from("educations")
-      .insert(education)
+      .insert(educationData)
       .select()
       .single();
 
