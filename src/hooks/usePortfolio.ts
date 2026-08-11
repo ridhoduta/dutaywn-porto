@@ -179,16 +179,32 @@ export function useProjects() {
 
         if (techsError) throw techsError;
 
-        // Map technologies to projects
+        // Normalize image_url → image_urls and map technologies to projects
         const projectsWithTechs: ProjectWithTechnologies[] = projectsData.map(
-          (project) => ({
-            ...project,
-            technologies:
-              projectTechs
-                ?.filter((pt: any) => pt.project_id === project.id)
-                .map((pt: any) => pt.technologies)
-                .filter(Boolean) || [],
-          })
+          (project) => {
+            const raw = project as any;
+            // Support both old image_url (string) and new image_urls (string[])
+            let image_urls: string[];
+            if (Array.isArray(raw.image_urls)) {
+              image_urls = raw.image_urls;
+            } else if (typeof raw.image_url === "string" && raw.image_url) {
+              image_urls = raw.image_url.startsWith("[")
+                ? JSON.parse(raw.image_url)
+                : [raw.image_url];
+            } else {
+              image_urls = [];
+            }
+            const { image_url: _drop, image_urls: _drop2, ...rest } = raw;
+            return {
+              ...rest,
+              image_urls,
+              technologies:
+                projectTechs
+                  ?.filter((pt: any) => pt.project_id === project.id)
+                  .map((pt: any) => pt.technologies)
+                  .filter(Boolean) || [],
+            };
+          }
         );
 
         setProjects(projectsWithTechs);

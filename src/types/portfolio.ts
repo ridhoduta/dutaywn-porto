@@ -36,7 +36,7 @@ export type Project = {
   title: string;
   slug: string;
   description: string;
-  image_url: string | null;
+  image_urls: string[];
   demo_url: string | null;
   github_url: string | null;
   created_at: string;

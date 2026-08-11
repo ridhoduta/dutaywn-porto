@@ -259,6 +259,26 @@ export async function createTechnology(
 
 // ==================== Projects ====================
 
+/** Normalize a raw DB project row (image_url: string|null) → typed Project (image_urls: string[]) */
+function normalizeProject(row: any): import("@/types/portfolio").Project {
+  const { image_url, ...rest } = row;
+  return {
+    ...rest,
+    image_urls: image_url
+      ? image_url.startsWith("[")
+        ? JSON.parse(image_url)
+        : [image_url]
+      : [],
+  };
+}
+
+/** Serialize image_urls[] back to a single string for the DB column */
+function serializeImageUrls(image_urls: string[]): string | null {
+  if (image_urls.length === 0) return null;
+  if (image_urls.length === 1) return image_urls[0];
+  return JSON.stringify(image_urls);
+}
+
 export async function getProjects(): Promise<
   ApiResponse<ProjectWithTechnologies[]>
 > {
@@ -305,7 +325,7 @@ export async function getProjects(): Promise<
     // Map technologies to projects
     const projectsWithTechs: ProjectWithTechnologies[] = projects.map(
       (project) => ({
-        ...project,
+        ...normalizeProject(project),
         technologies:
           projectTechs
             ?.filter((pt: any) => pt.project_id === project.id)
@@ -359,7 +379,7 @@ export async function getProjectBySlug(
     }
 
     const projectWithTechs: ProjectWithTechnologies = {
-      ...project,
+      ...normalizeProject(project),
       technologies:
         projectTechs?.map((pt: any) => pt.technologies).filter(Boolean) || [],
     };
@@ -380,10 +400,13 @@ export async function createProject(
   try {
     const supabase = await createClient();
 
+    const { image_urls, ...rest } = project;
+    const dbRow = { ...rest, image_url: serializeImageUrls(image_urls) };
+
     // Create project
     const { data, error } = await supabase
       .from("projects")
-      .insert(project)
+      .insert(dbRow)
       .select()
       .single();
 
@@ -409,7 +432,7 @@ export async function createProject(
       }
     }
 
-    return { data, error: null };
+    return { data: normalizeProject(data), error: null };
   } catch (error) {
     return {
       data: null,
@@ -426,10 +449,17 @@ export async function updateProject(
   try {
     const supabase = await createClient();
 
+    // Serialize image_urls → image_url for DB
+    const { image_urls, ...rest } = project;
+    const dbRow: any = { ...rest };
+    if (image_urls !== undefined) {
+      dbRow.image_url = serializeImageUrls(image_urls);
+    }
+
     // Update project
     const { data, error } = await supabase
       .from("projects")
-      .update(project)
+      .update(dbRow)
       .eq("id", id)
       .select()
       .single();
@@ -460,7 +490,7 @@ export async function updateProject(
       }
     }
 
-    return { data, error: null };
+    return { data: normalizeProject(data), error: null };
   } catch (error) {
     return {
       data: null,

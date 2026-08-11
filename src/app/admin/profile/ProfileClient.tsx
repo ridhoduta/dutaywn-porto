@@ -14,7 +14,7 @@ import {
 import { Profile } from "@/types/portfolio";
 import { updateProfile } from "@/lib/actions/portfolio";
 import { handleLogout } from "../logout-action";
-import { STORAGE_BUCKETS } from "@/lib/supabase/storage";
+import { STORAGE_BUCKETS, uploadImage } from "@/lib/supabase/storage";
 
 interface ProfileClientProps {
   initialProfile: Profile | null;
@@ -31,6 +31,9 @@ export function ProfileClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
   const [success, setSuccess] = useState(false);
+
+  // Pending profile image file — uploaded to storage only on submit
+  const [pendingProfileImage, setPendingProfileImage] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: initialProfile?.name || "",
@@ -51,11 +54,23 @@ export function ProfileClient({
     setSuccess(false);
 
     try {
-      const { error } = await updateProfile(formData);
+      // Upload pending profile image to storage first
+      let profileImageUrl = formData.profile_image;
+      if (pendingProfileImage) {
+        const result = await uploadImage(pendingProfileImage, STORAGE_BUCKETS.PROFILES);
+        if (result.error) {
+          setError(`Image upload failed: ${result.error}`);
+          return;
+        }
+        if (result.data) profileImageUrl = result.data.publicUrl;
+      }
+
+      const { error } = await updateProfile({ ...formData, profile_image: profileImageUrl });
       if (error) {
         setError(error);
       } else {
         setSuccess(true);
+        setPendingProfileImage(null);
         router.refresh();
         setTimeout(() => setSuccess(false), 3000);
       }
@@ -186,9 +201,9 @@ export function ProfileClient({
             <ImageUpload
               label="Profile Image"
               value={formData.profile_image}
-              onChange={(url) => setFormData({ ...formData, profile_image: url })}
+              onFileSelect={(file) => setPendingProfileImage(file)}
               bucket={STORAGE_BUCKETS.PROFILES}
-              helperText="Upload your profile photo (max 5MB, JPG/PNG/WEBP)"
+              helperText="Select your profile photo — it will be uploaded when you save (max 5MB, JPG/PNG/WEBP)"
               preview
             />
           </Card>

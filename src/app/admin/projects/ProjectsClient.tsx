@@ -12,7 +12,6 @@ import {
   Table,
   TableAction,
   Badge,
-  ImageUpload,
   type Column,
 } from "@/components/admin";
 import { ProjectWithTechnologies, Technology } from "@/types/portfolio";
@@ -22,7 +21,8 @@ import {
   deleteProject,
 } from "@/lib/actions/portfolio";
 import { handleLogout } from "../logout-action";
-import { STORAGE_BUCKETS } from "@/lib/supabase/storage";
+import { STORAGE_BUCKETS, uploadImage } from "@/lib/supabase/storage";
+import { MultipleImageUpload } from "@/components/admin/MultipleImageUpload";
 
 interface ProjectsClientProps {
   initialProjects: ProjectWithTechnologies[];
@@ -45,11 +45,14 @@ export function ProjectsClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
 
+  // Pending image files — uploaded to storage only when the form is submitted
+  const [pendingImageFiles, setPendingImageFiles] = useState<File[]>([]);
+
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
     description: "",
-    image_url: "",
+    image_urls: [] as string[],
     demo_url: "",
     github_url: "",
     technology_ids: [] as number[],
@@ -68,7 +71,7 @@ export function ProjectsClient({
         title: project.title,
         slug: project.slug,
         description: project.description,
-        image_url: project.image_url || "",
+        image_urls: project.image_urls,
         demo_url: project.demo_url || "",
         github_url: project.github_url || "",
         technology_ids: project.technologies.map((t) => t.id),
@@ -79,7 +82,7 @@ export function ProjectsClient({
         title: "",
         slug: "",
         description: "",
-        image_url: "",
+        image_urls: [],
         demo_url: "",
         github_url: "",
         technology_ids: [],
@@ -87,6 +90,7 @@ export function ProjectsClient({
     }
     setIsFormOpen(true);
     setError(null);
+    setPendingImageFiles([]);
   };
 
   const handleCloseForm = () => {
@@ -96,12 +100,13 @@ export function ProjectsClient({
       title: "",
       slug: "",
       description: "",
-      image_url: "",
+      image_urls: [],
       demo_url: "",
       github_url: "",
       technology_ids: [],
     });
     setError(null);
+    setPendingImageFiles([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,8 +115,22 @@ export function ProjectsClient({
     setError(null);
 
     try {
-      // Separate project data from technology IDs
-      const { technology_ids, ...projectData } = formData;
+      // Upload any pending image files to storage first
+      const uploadedUrls: string[] = [];
+      for (const file of pendingImageFiles) {
+        const result = await uploadImage(file, STORAGE_BUCKETS.PROJECTS);
+        if (result.error) {
+          setError(`Image upload failed: ${result.error}`);
+          return;
+        }
+        if (result.data) uploadedUrls.push(result.data.publicUrl);
+      }
+
+      // Combine already-committed URLs with newly uploaded ones
+      const finalImageUrls = [...formData.image_urls, ...uploadedUrls];
+
+      const { technology_ids, image_urls: _removed, ...rest } = formData;
+      const projectData = { ...rest, image_urls: finalImageUrls };
 
       if (editingProject) {
         const { error } = await updateProject(editingProject.id, projectData, technology_ids);
@@ -349,12 +368,12 @@ export function ProjectsClient({
                   required
                 />
 
-                <ImageUpload
-                  label="Project Image"
-                  value={formData.image_url}
-                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                <MultipleImageUpload
+                  label="Project Images"
+                  value={formData.image_urls}
+                  onFileSelect={(files) => setPendingImageFiles(files)}
                   bucket={STORAGE_BUCKETS.PROJECTS}
-                  helperText="Upload project preview image (max 5MB, JPG/PNG/WEBP)"
+                  helperText="Select project images — they will be uploaded when you save (max 5MB, JPG/PNG/WEBP)"
                   preview
                 />
 

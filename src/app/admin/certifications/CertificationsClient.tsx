@@ -22,7 +22,7 @@ import {
   deleteCertification,
 } from "@/lib/actions/portfolio";
 import { handleLogout } from "../logout-action";
-import { STORAGE_BUCKETS } from "@/lib/supabase/storage";
+import { STORAGE_BUCKETS, uploadPDF } from "@/lib/supabase/storage";
 
 interface CertificationsClientProps {
   initialCertifications: Certification[];
@@ -42,6 +42,9 @@ export function CertificationsClient({
   const [editingCert, setEditingCert] = useState<Certification | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
+
+  // Pending PDF file — uploaded to storage only when the form is submitted
+  const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -82,6 +85,7 @@ export function CertificationsClient({
     }
     setIsFormOpen(true);
     setError(null);
+    setPendingPdfFile(null);
   };
 
   const handleCloseForm = () => {
@@ -96,6 +100,7 @@ export function CertificationsClient({
       description: "",
     });
     setError(null);
+    setPendingPdfFile(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,20 +109,35 @@ export function CertificationsClient({
     setError(null);
 
     try {
+      // Upload pending PDF to storage first
+      let imageUrl = formData.image_url;
+      if (pendingPdfFile) {
+        const result = await uploadPDF(pendingPdfFile, STORAGE_BUCKETS.CERTIFICATIONS);
+        if (result.error) {
+          setError(`PDF upload failed: ${result.error}`);
+          return;
+        }
+        if (result.data) imageUrl = result.data.publicUrl;
+      }
+
+      const payload = { ...formData, image_url: imageUrl };
+
       if (editingCert) {
-        const { data, error } = await updateCertification(editingCert.id, formData);
+        const { data, error } = await updateCertification(editingCert.id, payload);
         if (error) {
           setError(error);
         } else if (data) {
           setCertifications(certifications.map((c) => (c.id === data.id ? data : c)));
+          setPendingPdfFile(null);
           handleCloseForm();
         }
       } else {
-        const { data, error } = await createCertification(formData);
+        const { data, error } = await createCertification(payload);
         if (error) {
           setError(error);
         } else if (data) {
           setCertifications([...certifications, data]);
+          setPendingPdfFile(null);
           handleCloseForm();
         }
       }
@@ -315,9 +335,9 @@ export function CertificationsClient({
                 <PdfUpload
                   label="Certification Document (PDF)"
                   value={formData.image_url}
-                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                  onFileSelect={(file) => setPendingPdfFile(file)}
                   bucket={STORAGE_BUCKETS.CERTIFICATIONS}
-                  helperText="Upload certificate PDF document (max 10MB)"
+                  helperText="Select certificate PDF — it will be uploaded when you save (max 10MB)"
                 />
 
                 <Textarea
