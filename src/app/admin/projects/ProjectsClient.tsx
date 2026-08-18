@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AdminLayout,
@@ -13,16 +13,45 @@ import {
   TableAction,
   Badge,
   type Column,
+  EntityListEditor,
+  type EntityItem,
 } from "@/components/admin";
-import { ProjectWithTechnologies, Technology } from "@/types/portfolio";
+import { ProjectWithDetails, ProjectWithTechnologies, Technology } from "@/types/portfolio";
 import {
   createProject,
   updateProject,
   deleteProject,
+  getProjectWithDetails,
+  createProjectProblem,
+  createProjectSolution,
+  createProjectDesign,
+  createProjectFeature,
+  createProjectTesting,
+  createProjectResult,
+  createProjectLearning,
+  deleteProjectProblem,
+  deleteProjectSolution,
+  deleteProjectDesign,
+  deleteProjectFeature,
+  deleteProjectTesting,
+  deleteProjectResult,
+  deleteProjectLearning,
 } from "@/lib/actions/portfolio";
 import { handleLogout } from "../logout-action";
 import { STORAGE_BUCKETS, uploadImage } from "@/lib/supabase/storage";
 import { MultipleImageUpload } from "@/components/admin/MultipleImageUpload";
+import { entityConfigs } from "./entityConfigs";
+
+type SectionKey =
+  | "problems"
+  | "solutions"
+  | "designs"
+  | "features"
+  | "testings"
+  | "results"
+  | "learnings";
+
+type DetailDrafts = Record<SectionKey, EntityItem[]>;
 
 interface ProjectsClientProps {
   initialProjects: ProjectWithTechnologies[];
@@ -47,11 +76,26 @@ export function ProjectsClient({
 
   // Pending image files — uploaded to storage only when the form is submitted
   const [pendingImageFiles, setPendingImageFiles] = useState<File[]>([]);
+  const [details, setDetails] = useState<ProjectWithDetails | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailDrafts, setDetailDrafts] = useState<DetailDrafts>({
+    problems: [],
+    solutions: [],
+    designs: [],
+    features: [],
+    testings: [],
+    results: [],
+    learnings: [],
+  });
 
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
     description: "",
+    role: "",
+    duration: "",
+    platform: "",
+    team: "",
     image_urls: [] as string[],
     demo_url: "",
     github_url: "",
@@ -64,6 +108,32 @@ export function ProjectsClient({
       project.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    if (!editingProject) {
+      return;
+    }
+    void Promise.resolve().then(() => {
+      setDetailsLoading(true);
+      return getProjectWithDetails(editingProject.id)
+        .then((result) => {
+          if (result.error) setError(result.error);
+          else {
+            setDetails(result.data);
+            setDetailDrafts({
+              problems: (result.data?.problems || []).map((item) => ({ ...item })),
+              solutions: (result.data?.solutions || []).map((item) => ({ ...item })),
+              designs: (result.data?.designs || []).map((item) => ({ ...item })),
+              features: (result.data?.features || []).map((item) => ({ ...item })),
+              testings: (result.data?.testings || []).map((item) => ({ ...item })),
+              results: (result.data?.results || []).map((item) => ({ ...item })),
+              learnings: (result.data?.learnings || []).map((item) => ({ ...item })),
+            });
+          }
+        })
+        .finally(() => setDetailsLoading(false));
+    });
+  }, [editingProject]);
+
   const handleOpenForm = (project?: ProjectWithTechnologies) => {
     if (project) {
       setEditingProject(project);
@@ -71,6 +141,10 @@ export function ProjectsClient({
         title: project.title,
         slug: project.slug,
         description: project.description,
+        role: project.role || "",
+        duration: project.duration || "",
+        platform: project.platform || "",
+        team: project.team || "",
         image_urls: project.image_urls,
         demo_url: project.demo_url || "",
         github_url: project.github_url || "",
@@ -78,10 +152,24 @@ export function ProjectsClient({
       });
     } else {
       setEditingProject(null);
+      setDetails(null);
+      setDetailDrafts({
+        problems: [],
+        solutions: [],
+        designs: [],
+        features: [],
+        testings: [],
+        results: [],
+        learnings: [],
+      });
       setFormData({
         title: "",
         slug: "",
         description: "",
+        role: "",
+        duration: "",
+        platform: "",
+        team: "",
         image_urls: [],
         demo_url: "",
         github_url: "",
@@ -100,6 +188,10 @@ export function ProjectsClient({
       title: "",
       slug: "",
       description: "",
+      role: "",
+      duration: "",
+      platform: "",
+      team: "",
       image_urls: [],
       demo_url: "",
       github_url: "",
@@ -107,6 +199,70 @@ export function ProjectsClient({
     });
     setError(null);
     setPendingImageFiles([]);
+    setDetails(null);
+    setDetailDrafts({
+      problems: [],
+      solutions: [],
+      designs: [],
+      features: [],
+      testings: [],
+      results: [],
+      learnings: [],
+    });
+  };
+
+  const saveDetails = async (projectId: number) => {
+    const sections: Array<{
+      key: SectionKey;
+      create: (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }>;
+    }> = [
+      { key: "problems", create: createProjectProblem as unknown as (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }> },
+      { key: "solutions", create: createProjectSolution as unknown as (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }> },
+      { key: "designs", create: createProjectDesign as unknown as (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }> },
+      { key: "features", create: createProjectFeature as unknown as (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }> },
+      { key: "testings", create: createProjectTesting as unknown as (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }> },
+      { key: "results", create: createProjectResult as unknown as (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }> },
+      { key: "learnings", create: createProjectLearning as unknown as (projectId: number, data: Record<string, unknown>) => Promise<{ error: string | null }> },
+    ];
+
+    for (const section of sections) {
+      const items = detailDrafts[section.key] || [];
+
+      const existing = details?.[section.key] || [];
+      for (const row of existing) {
+        const removeFn =
+          section.key === "problems"
+            ? deleteProjectProblem
+            : section.key === "solutions"
+              ? deleteProjectSolution
+              : section.key === "designs"
+                ? deleteProjectDesign
+                : section.key === "features"
+                  ? deleteProjectFeature
+                  : section.key === "testings"
+                    ? deleteProjectTesting
+                    : section.key === "results"
+                      ? deleteProjectResult
+                      : deleteProjectLearning;
+        const removed = await removeFn(row.id);
+        if (removed.error) throw new Error(removed.error);
+      }
+
+      for (let i = 0; i < items.length; i++) {
+        const row = items[i];
+        const { id, project_id, created_at, updated_at, ...data } = row as Record<string, unknown>;
+        void id;
+        void project_id;
+        void created_at;
+        void updated_at;
+        const payload = {
+          ...data,
+          sort_order: typeof data.sort_order === "number" ? data.sort_order : i,
+        };
+        const created = await section.create(projectId, payload);
+        if (created.error) throw new Error(created.error);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -129,26 +285,30 @@ export function ProjectsClient({
       // Combine already-committed URLs with newly uploaded ones
       const finalImageUrls = [...formData.image_urls, ...uploadedUrls];
 
-      const { technology_ids, image_urls: _removed, ...rest } = formData;
+      const { technology_ids, ...rest } = formData;
       const projectData = { ...rest, image_urls: finalImageUrls };
 
       if (editingProject) {
         const { error } = await updateProject(editingProject.id, projectData, technology_ids);
-        if (error) {
+          if (error) {
           setError(error);
-        } else {
-          router.refresh();
+          } else {
+            if (editingProject) await saveDetails(editingProject.id);
+            router.refresh();
           handleCloseForm();
         }
       } else {
-        const { error } = await createProject(projectData, technology_ids);
+        const { data, error } = await createProject(projectData, technology_ids);
         if (error) {
           setError(error);
         } else {
+          if (data) await saveDetails(data.id);
           router.refresh();
           handleCloseForm();
         }
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save project details");
     } finally {
       setLoading(false);
     }
@@ -312,7 +472,7 @@ export function ProjectsClient({
 
         {/* Form Modal */}
         {isFormOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 px-4 py-8 overflow-y-auto">
             <Card
               title={editingProject ? "Edit Project" : "Add New Project"}
               subtitle={
@@ -320,7 +480,7 @@ export function ProjectsClient({
                   ? "Update project information"
                   : "Fill in the form to add a new project"
               }
-              className="w-full max-w-2xl my-8"
+              className="w-full max-w-5xl my-8"
             >
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
@@ -367,6 +527,48 @@ export function ProjectsClient({
                   rows={4}
                   required
                 />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Role"
+                    placeholder="e.g., Full-stack Developer"
+                    value={formData.role}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role: e.target.value })
+                    }
+                    helperText="Your role in the project"
+                  />
+
+                  <Input
+                    label="Duration"
+                    placeholder="e.g., 3 months"
+                    value={formData.duration}
+                    onChange={(e) =>
+                      setFormData({ ...formData, duration: e.target.value })
+                    }
+                    helperText="Project duration"
+                  />
+
+                  <Input
+                    label="Platform"
+                    placeholder="e.g., Web, Mobile, Desktop"
+                    value={formData.platform}
+                    onChange={(e) =>
+                      setFormData({ ...formData, platform: e.target.value })
+                    }
+                    helperText="Target platform"
+                  />
+
+                  <Input
+                    label="Team"
+                    placeholder="e.g., Solo, 5 developers"
+                    value={formData.team}
+                    onChange={(e) =>
+                      setFormData({ ...formData, team: e.target.value })
+                    }
+                    helperText="Team size or structure"
+                  />
+                </div>
 
                 <MultipleImageUpload
                   label="Project Images"
@@ -438,6 +640,34 @@ export function ProjectsClient({
                   <p className="mt-1 text-sm text-slate-500">
                     {formData.technology_ids.length} selected
                   </p>
+                </div>
+
+                <div className="border-t border-slate-200 pt-5 space-y-5">
+                  <div>
+                    <h3 className="font-semibold text-slate-900">Project Details</h3>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Manage problems, solutions, designs, features, testings, results, and learnings.
+                    </p>
+                  </div>
+                  {detailsLoading ? (
+                    <p className="text-sm text-slate-500">Loading project details...</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {(Object.keys(entityConfigs) as SectionKey[]).map((key) => (
+                        <EntityListEditor
+                          key={key}
+                          config={entityConfigs[key]}
+                          items={detailDrafts[key] || []}
+                          onChange={(items) =>
+                            setDetailDrafts((current) => ({
+                              ...current,
+                              [key]: items,
+                            }))
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">

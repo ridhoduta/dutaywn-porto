@@ -7,6 +7,7 @@ export const STORAGE_BUCKETS = {
   PROFILES: "profile-images",
   PROJECTS: "project-images",
   CERTIFICATIONS: "certification-images",
+  DOCUMENTS: "img-project",
 } as const;
 
 export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS];

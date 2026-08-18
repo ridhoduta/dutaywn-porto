@@ -14,3 +14,7 @@ export { PdfUpload } from "./PdfUpload";
 // Table Components
 export { Table, TableAction, Badge } from "./Table";
 export type { Column } from "./Table";
+
+// Entity Editor
+export { EntityListEditor } from "./EntityListEditor";
+export type { EntityConfig, EntityField, EntityItem } from "./EntityListEditor";

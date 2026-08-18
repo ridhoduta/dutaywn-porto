@@ -36,6 +36,10 @@ export type Project = {
   title: string;
   slug: string;
   description: string;
+  role?: string | null;
+  duration?: string | null;
+  platform?: string | null;
+  team?: string | null;
   image_urls: string[];
   demo_url: string | null;
   github_url: string | null;
@@ -87,4 +91,110 @@ export type PortfolioData = {
 export type ApiResponse<T> = {
   data: T | null;
   error: string | null;
+};
+
+// ==================== Project Child Entities ====================
+
+export type ProjectProblem = {
+  id: number;
+  project_id: number;
+  title: string;
+  description: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectSolution = {
+  id: number;
+  project_id: number;
+  title: string;
+  description: string;
+  icon: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectDesignType =
+  | "wireframe"
+  | "mockup"
+  | "prototype"
+  | "uml"
+  | "flowchart"
+  | string;
+
+export type ProjectDesign = {
+  id: number;
+  project_id: number;
+  type: ProjectDesignType;
+  title: string;
+  description: string;
+  image_url: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectFeature = {
+  id: number;
+  project_id: number;
+  title: string;
+  description: string;
+  image_url: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectTestingStatus = "passed" | "failed" | "pending" | "skipped";
+
+export type ProjectTesting = {
+  id: number;
+  project_id: number;
+  test_case: string;
+  expected_result: string;
+  actual_result: string;
+  status: ProjectTestingStatus;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectResult = {
+  id: number;
+  project_id: number;
+  title: string;
+  description: string;
+  metric_value: string;
+  metric_label: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectLearning = {
+  id: number;
+  project_id: number;
+  content: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Reorder payload — used by batch reorder actions and hooks */
+export type ReorderItem = {
+  id: number;
+  sort_order: number;
+};
+
+/** Fully enriched project with all child entities */
+export type ProjectWithDetails = ProjectWithTechnologies & {
+  problems: ProjectProblem[];
+  solutions: ProjectSolution[];
+  designs: ProjectDesign[];
+  features: ProjectFeature[];
+  testings: ProjectTesting[];
+  results: ProjectResult[];
+  learnings: ProjectLearning[];
 };

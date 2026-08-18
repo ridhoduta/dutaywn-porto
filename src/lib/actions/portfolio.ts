@@ -6,12 +6,34 @@ import type {
   Skill,
   Project,
   ProjectWithTechnologies,
+  ProjectWithDetails,
+  ProjectProblem,
+  ProjectSolution,
+  ProjectDesign,
+  ProjectFeature,
+  ProjectTesting,
+  ProjectResult,
+  ProjectLearning,
+  ReorderItem,
   Certification,
   Education,
   Technology,
   ApiResponse,
   PortfolioData,
 } from "@/types/portfolio";
+
+function isBlank(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length === 0;
+}
+
+function missingFields(fields: Array<[string, unknown]>) {
+  return fields.filter(([, value]) => value === undefined || value === null || isBlank(value));
+}
+
+function requiredError(name: string, fields: Array<[string, unknown]>) {
+  const missing = missingFields(fields).map(([key]) => key);
+  return missing.length > 0 ? `${name}: missing required field(s): ${missing.join(", ")}` : null;
+}
 
 // ==================== Profile ====================
 
@@ -259,17 +281,40 @@ export async function createTechnology(
 
 // ==================== Projects ====================
 
-/** Normalize a raw DB project row (image_url: string|null) → typed Project (image_urls: string[]) */
-function normalizeProject(row: any): import("@/types/portfolio").Project {
+type ProjectDbRow = Omit<Project, "image_urls"> & {
+  image_url?: string | null;
+  image_urls?: string[];
+};
+
+type ProjectTechnologyRow = {
+  project_id?: number;
+  technologies: Technology | Technology[] | null;
+};
+
+type ProjectWithTechnologyRows = ProjectDbRow & {
+  project_technologies?: ProjectTechnologyRow[];
+};
+
+/** Normalize a raw DB project row (image_url: string|null) -> typed Project (image_urls: string[]) */
+function normalizeProject(row: ProjectDbRow): Project {
   const { image_url, ...rest } = row;
   return {
     ...rest,
-    image_urls: image_url
-      ? image_url.startsWith("[")
-        ? JSON.parse(image_url)
-        : [image_url]
-      : [],
+    image_urls:
+      row.image_urls || (image_url
+        ? image_url.startsWith("[")
+          ? JSON.parse(image_url)
+          : [image_url]
+        : []),
   };
+}
+
+function isTechnology(value: Technology | null): value is Technology {
+  return value !== null;
+}
+
+function toTechnology(value: Technology | Technology[] | null): Technology | null {
+  return Array.isArray(value) ? value[0] ?? null : value;
 }
 
 /** Serialize image_urls[] back to a single string for the DB column */
@@ -327,10 +372,10 @@ export async function getProjects(): Promise<
       (project) => ({
         ...normalizeProject(project),
         technologies:
-          projectTechs
-            ?.filter((pt: any) => pt.project_id === project.id)
-            .map((pt: any) => pt.technologies)
-            .filter(Boolean) || [],
+          (projectTechs as unknown as ProjectTechnologyRow[] | null)
+            ?.filter((pt) => pt.project_id === project.id)
+            .map((pt) => toTechnology(pt.technologies))
+            .filter(isTechnology) || [],
       })
     );
 
@@ -381,7 +426,9 @@ export async function getProjectBySlug(
     const projectWithTechs: ProjectWithTechnologies = {
       ...normalizeProject(project),
       technologies:
-        projectTechs?.map((pt: any) => pt.technologies).filter(Boolean) || [],
+        (projectTechs as unknown as ProjectTechnologyRow[] | null)
+          ?.map((pt) => toTechnology(pt.technologies))
+          .filter(isTechnology) || [],
     };
 
     return { data: projectWithTechs, error: null };
@@ -451,7 +498,7 @@ export async function updateProject(
 
     // Serialize image_urls → image_url for DB
     const { image_urls, ...rest } = project;
-    const dbRow: any = { ...rest };
+    const dbRow: Partial<Omit<ProjectDbRow, "image_urls">> = { ...rest };
     if (image_urls !== undefined) {
       dbRow.image_url = serializeImageUrls(image_urls);
     }
@@ -758,5 +805,637 @@ export async function getPortfolioData(): Promise<ApiResponse<PortfolioData>> {
       data: null,
       error: error instanceof Error ? error.message : "Unknown error",
     };
+  }
+}
+
+// ==================== Project Child Entities — Shared Helper ====================
+
+/**
+ * Generic batch reorder: update sort_order for multiple records in one table.
+ * Runs individual updates (Supabase JS client does not support bulk UPDATE natively).
+ */
+async function batchReorder(
+  table: string,
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  try {
+    if (!Array.isArray(items) || items.length === 0) {
+      return { data: null, error: "items must be a non-empty array" };
+    }
+
+    const ids = new Set<number>();
+    for (const item of items) {
+      if (!item || typeof item.id !== "number" || typeof item.sort_order !== "number") {
+        return { data: null, error: "items must contain id and sort_order numbers" };
+      }
+      if (ids.has(item.id)) {
+        return { data: null, error: "items contains duplicate id" };
+      }
+      ids.add(item.id);
+    }
+
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("reorder_project_child_entities", {
+      table_name: table,
+      project_id_value: projectId,
+      reorder_items: items,
+    });
+
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+// ==================== PROJECT_PROBLEMS ====================
+
+export async function getProjectProblems(
+  projectId: number
+): Promise<ApiResponse<ProjectProblem[]>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_problems")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+    if (error) return { data: null, error: error.message };
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function createProjectProblem(
+  projectId: number,
+  data: Omit<ProjectProblem, "id" | "project_id" | "created_at" | "updated_at">
+): Promise<ApiResponse<ProjectProblem>> {
+  try {
+    const validationError = requiredError("ProjectProblem", [["title", data.title], ["description", data.description]]);
+    if (validationError) return { data: null, error: validationError };
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_problems")
+      .insert({ ...data, project_id: projectId, sort_order: data.sort_order ?? 0 })
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function updateProjectProblem(
+  id: number,
+  data: Partial<Omit<ProjectProblem, "id" | "project_id" | "created_at" | "updated_at">>
+): Promise<ApiResponse<ProjectProblem>> {
+  try {
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_problems")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function deleteProjectProblem(id: number): Promise<ApiResponse<null>> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("project_problems").delete().eq("id", id);
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reorderProjectProblems(
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  return batchReorder("project_problems", projectId, items);
+}
+
+// ==================== PROJECT_SOLUTIONS ====================
+
+export async function getProjectSolutions(
+  projectId: number
+): Promise<ApiResponse<ProjectSolution[]>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_solutions")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+    if (error) return { data: null, error: error.message };
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function createProjectSolution(
+  projectId: number,
+  data: Omit<ProjectSolution, "id" | "project_id" | "created_at" | "updated_at">
+): Promise<ApiResponse<ProjectSolution>> {
+  try {
+    const validationError = requiredError("ProjectSolution", [["title", data.title], ["description", data.description]]);
+    if (validationError) return { data: null, error: validationError };
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_solutions")
+      .insert({ ...data, project_id: projectId, sort_order: data.sort_order ?? 0 })
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function updateProjectSolution(
+  id: number,
+  data: Partial<Omit<ProjectSolution, "id" | "project_id" | "created_at" | "updated_at">>
+): Promise<ApiResponse<ProjectSolution>> {
+  try {
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_solutions")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function deleteProjectSolution(id: number): Promise<ApiResponse<null>> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("project_solutions").delete().eq("id", id);
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reorderProjectSolutions(
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  return batchReorder("project_solutions", projectId, items);
+}
+
+// ==================== PROJECT_DESIGNS ====================
+
+export async function getProjectDesigns(
+  projectId: number
+): Promise<ApiResponse<ProjectDesign[]>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_designs")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+    if (error) return { data: null, error: error.message };
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function createProjectDesign(
+  projectId: number,
+  data: Omit<ProjectDesign, "id" | "project_id" | "created_at" | "updated_at">
+): Promise<ApiResponse<ProjectDesign>> {
+  try {
+    const validationError = requiredError("ProjectDesign", [["type", data.type], ["title", data.title], ["description", data.description], ["image_url", data.image_url]]);
+    if (validationError) return { data: null, error: validationError };
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_designs")
+      .insert({ ...data, project_id: projectId, sort_order: data.sort_order ?? 0 })
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function updateProjectDesign(
+  id: number,
+  data: Partial<Omit<ProjectDesign, "id" | "project_id" | "created_at" | "updated_at">>
+): Promise<ApiResponse<ProjectDesign>> {
+  try {
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_designs")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function deleteProjectDesign(id: number): Promise<ApiResponse<null>> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("project_designs").delete().eq("id", id);
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reorderProjectDesigns(
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  return batchReorder("project_designs", projectId, items);
+}
+
+// ==================== PROJECT_FEATURES ====================
+
+export async function getProjectFeatures(
+  projectId: number
+): Promise<ApiResponse<ProjectFeature[]>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_features")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+    if (error) return { data: null, error: error.message };
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function createProjectFeature(
+  projectId: number,
+  data: Omit<ProjectFeature, "id" | "project_id" | "created_at" | "updated_at">
+): Promise<ApiResponse<ProjectFeature>> {
+  try {
+    const validationError = requiredError("ProjectFeature", [["title", data.title], ["description", data.description]]);
+    if (validationError) return { data: null, error: validationError };
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_features")
+      .insert({ ...data, project_id: projectId, sort_order: data.sort_order ?? 0 })
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function updateProjectFeature(
+  id: number,
+  data: Partial<Omit<ProjectFeature, "id" | "project_id" | "created_at" | "updated_at">>
+): Promise<ApiResponse<ProjectFeature>> {
+  try {
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_features")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function deleteProjectFeature(id: number): Promise<ApiResponse<null>> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("project_features").delete().eq("id", id);
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reorderProjectFeatures(
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  return batchReorder("project_features", projectId, items);
+}
+
+// ==================== PROJECT_TESTINGS ====================
+
+export async function getProjectTestings(
+  projectId: number
+): Promise<ApiResponse<ProjectTesting[]>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_testings")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+    if (error) return { data: null, error: error.message };
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function createProjectTesting(
+  projectId: number,
+  data: Omit<ProjectTesting, "id" | "project_id" | "created_at" | "updated_at">
+): Promise<ApiResponse<ProjectTesting>> {
+  try {
+    const validationError = requiredError("ProjectTesting", [["test_case", data.test_case], ["expected_result", data.expected_result], ["actual_result", data.actual_result], ["status", data.status]]);
+    if (validationError) return { data: null, error: validationError };
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_testings")
+      .insert({ ...data, project_id: projectId, sort_order: data.sort_order ?? 0 })
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function updateProjectTesting(
+  id: number,
+  data: Partial<Omit<ProjectTesting, "id" | "project_id" | "created_at" | "updated_at">>
+): Promise<ApiResponse<ProjectTesting>> {
+  try {
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_testings")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function deleteProjectTesting(id: number): Promise<ApiResponse<null>> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("project_testings").delete().eq("id", id);
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reorderProjectTestings(
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  return batchReorder("project_testings", projectId, items);
+}
+
+// ==================== PROJECT_RESULTS ====================
+
+export async function getProjectResults(
+  projectId: number
+): Promise<ApiResponse<ProjectResult[]>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_results")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+    if (error) return { data: null, error: error.message };
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function createProjectResult(
+  projectId: number,
+  data: Omit<ProjectResult, "id" | "project_id" | "created_at" | "updated_at">
+): Promise<ApiResponse<ProjectResult>> {
+  try {
+    const validationError = requiredError("ProjectResult", [["title", data.title], ["description", data.description], ["metric_value", data.metric_value], ["metric_label", data.metric_label]]);
+    if (validationError) return { data: null, error: validationError };
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_results")
+      .insert({ ...data, project_id: projectId, sort_order: data.sort_order ?? 0 })
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function updateProjectResult(
+  id: number,
+  data: Partial<Omit<ProjectResult, "id" | "project_id" | "created_at" | "updated_at">>
+): Promise<ApiResponse<ProjectResult>> {
+  try {
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_results")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function deleteProjectResult(id: number): Promise<ApiResponse<null>> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("project_results").delete().eq("id", id);
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reorderProjectResults(
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  return batchReorder("project_results", projectId, items);
+}
+
+// ==================== PROJECT_LEARNINGS ====================
+
+export async function getProjectLearnings(
+  projectId: number
+): Promise<ApiResponse<ProjectLearning[]>> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("project_learnings")
+      .select("*")
+      .eq("project_id", projectId)
+      .order("sort_order", { ascending: true });
+    if (error) return { data: null, error: error.message };
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function createProjectLearning(
+  projectId: number,
+  data: Omit<ProjectLearning, "id" | "project_id" | "created_at" | "updated_at">
+): Promise<ApiResponse<ProjectLearning>> {
+  try {
+    const validationError = requiredError("ProjectLearning", [["content", data.content]]);
+    if (validationError) return { data: null, error: validationError };
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_learnings")
+      .insert({ ...data, project_id: projectId, sort_order: data.sort_order ?? 0 })
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function updateProjectLearning(
+  id: number,
+  data: Partial<Omit<ProjectLearning, "id" | "project_id" | "created_at" | "updated_at">>
+): Promise<ApiResponse<ProjectLearning>> {
+  try {
+    const supabase = await createClient();
+    const { data: row, error } = await supabase
+      .from("project_learnings")
+      .update(data)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) return { data: null, error: error.message };
+    return { data: row, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function deleteProjectLearning(id: number): Promise<ApiResponse<null>> {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("project_learnings").delete().eq("id", id);
+    if (error) return { data: null, error: error.message };
+    return { data: null, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+export async function reorderProjectLearnings(
+  projectId: number,
+  items: ReorderItem[]
+): Promise<ApiResponse<null>> {
+  return batchReorder("project_learnings", projectId, items);
+}
+
+// ==================== PROJECT WITH DETAILS (Combined Fetch) ====================
+
+export async function getProjectWithDetails(
+  projectId: number
+): Promise<ApiResponse<ProjectWithDetails>> {
+  try {
+    const [
+      problemsRes,
+      solutionsRes,
+      designsRes,
+      featuresRes,
+      testingsRes,
+      resultsRes,
+      learningsRes,
+    ] = await Promise.all([
+      getProjectProblems(projectId),
+      getProjectSolutions(projectId),
+      getProjectDesigns(projectId),
+      getProjectFeatures(projectId),
+      getProjectTestings(projectId),
+      getProjectResults(projectId),
+      getProjectLearnings(projectId),
+    ]);
+
+    // Fetch project by id directly
+    const supabase = await createClient();
+    const { data: projectRow, error: projectError } = await supabase
+      .from("projects")
+      .select("*, project_technologies(technologies(id, name, icon, created_at))")
+      .eq("id", projectId)
+      .single();
+
+    if (projectError) return { data: null, error: projectError.message };
+
+    const projectWithRelations = projectRow as ProjectWithTechnologyRows;
+    const normalized = normalizeProject(projectWithRelations);
+    const technologies =
+      projectWithRelations.project_technologies
+        ?.map((pt) => toTechnology(pt.technologies))
+        .filter(isTechnology) || [];
+
+    const projectWithDetails: ProjectWithDetails = {
+      ...normalized,
+      technologies,
+      problems: problemsRes.data || [],
+      solutions: solutionsRes.data || [],
+      designs: designsRes.data || [],
+      features: featuresRes.data || [],
+      testings: testingsRes.data || [],
+      results: resultsRes.data || [],
+      learnings: learningsRes.data || [],
+    };
+
+    return { data: projectWithDetails, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
