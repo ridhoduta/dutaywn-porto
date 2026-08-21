@@ -281,31 +281,20 @@ export async function createTechnology(
 
 // ==================== Projects ====================
 
-type ProjectDbRow = Omit<Project, "image_urls"> & {
-  image_url?: string | null;
-  image_urls?: string[];
-};
-
 type ProjectTechnologyRow = {
   project_id?: number;
   technologies: Technology | Technology[] | null;
 };
 
-type ProjectWithTechnologyRows = ProjectDbRow & {
+type ProjectWithTechnologyRows = Project & {
   project_technologies?: ProjectTechnologyRow[];
 };
 
-/** Normalize a raw DB project row (image_url: string|null) -> typed Project (image_urls: string[]) */
-function normalizeProject(row: ProjectDbRow): Project {
-  const { image_url, ...rest } = row;
+/** Normalize a raw DB project row → typed Project */
+function normalizeProject(row: Project): Project {
   return {
-    ...rest,
-    image_urls:
-      row.image_urls || (image_url
-        ? image_url.startsWith("[")
-          ? JSON.parse(image_url)
-          : [image_url]
-        : []),
+    ...row,
+    image_urls: row.image_urls || [],
   };
 }
 
@@ -315,13 +304,6 @@ function isTechnology(value: Technology | null): value is Technology {
 
 function toTechnology(value: Technology | Technology[] | null): Technology | null {
   return Array.isArray(value) ? value[0] ?? null : value;
-}
-
-/** Serialize image_urls[] back to a single string for the DB column */
-function serializeImageUrls(image_urls: string[]): string | null {
-  if (image_urls.length === 0) return null;
-  if (image_urls.length === 1) return image_urls[0];
-  return JSON.stringify(image_urls);
 }
 
 export async function getProjects(): Promise<
@@ -370,7 +352,7 @@ export async function getProjects(): Promise<
     // Map technologies to projects
     const projectsWithTechs: ProjectWithTechnologies[] = projects.map(
       (project) => ({
-        ...normalizeProject(project),
+        ...project,
         technologies:
           (projectTechs as unknown as ProjectTechnologyRow[] | null)
             ?.filter((pt) => pt.project_id === project.id)
@@ -424,7 +406,7 @@ export async function getProjectBySlug(
     }
 
     const projectWithTechs: ProjectWithTechnologies = {
-      ...normalizeProject(project),
+      ...project,
       technologies:
         (projectTechs as unknown as ProjectTechnologyRow[] | null)
           ?.map((pt) => toTechnology(pt.technologies))
@@ -446,34 +428,26 @@ export async function createProject(
 ): Promise<ApiResponse<Project>> {
   try {
     const supabase = await createClient();
+    const projectPayload = { ...project };
+    delete (projectPayload as Record<string, unknown>).image_url;
+    if (!projectPayload.image_urls) {
+      projectPayload.image_urls = [];
+    }
 
-    const { image_urls, ...rest } = project;
-    const dbRow = { ...rest, image_url: serializeImageUrls(image_urls) };
-
-    // Create project
     const { data, error } = await supabase
       .from("projects")
-      .insert(dbRow)
+      .insert(projectPayload)
       .select()
       .single();
 
-    if (error) {
-      return { data: null, error: error.message };
-    }
+    if (error) return { data: null, error: error.message };
 
-    // Add technologies
     if (technologyIds.length > 0) {
-      const projectTechs = technologyIds.map((techId) => ({
-        project_id: data.id,
-        technology_id: techId,
-      }));
-
       const { error: techError } = await supabase
         .from("project_technologies")
-        .insert(projectTechs);
+        .insert(technologyIds.map((techId) => ({ project_id: data.id, technology_id: techId })));
 
       if (techError) {
-        // Rollback: delete the project
         await supabase.from("projects").delete().eq("id", data.id);
         return { data: null, error: techError.message };
       }
@@ -481,10 +455,7 @@ export async function createProject(
 
     return { data: normalizeProject(data), error: null };
   } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
@@ -495,85 +466,49 @@ export async function updateProject(
 ): Promise<ApiResponse<Project>> {
   try {
     const supabase = await createClient();
+    const projectPayload = { ...project };
+    delete (projectPayload as Record<string, unknown>).image_url;
 
-    // Serialize image_urls → image_url for DB
-    const { image_urls, ...rest } = project;
-    const dbRow: Partial<Omit<ProjectDbRow, "image_urls">> = { ...rest };
-    if (image_urls !== undefined) {
-      dbRow.image_url = serializeImageUrls(image_urls);
-    }
-
-    // Update project
     const { data, error } = await supabase
       .from("projects")
-      .update(dbRow)
+      .update(projectPayload)
       .eq("id", id)
       .select()
       .single();
 
-    if (error) {
-      return { data: null, error: error.message };
-    }
+    if (error) return { data: null, error: error.message };
 
-    // Update technologies if provided
     if (technologyIds !== undefined) {
-      // Delete existing technologies
       await supabase.from("project_technologies").delete().eq("project_id", id);
-
-      // Add new technologies
       if (technologyIds.length > 0) {
-        const projectTechs = technologyIds.map((techId) => ({
-          project_id: id,
-          technology_id: techId,
-        }));
-
         const { error: techError } = await supabase
           .from("project_technologies")
-          .insert(projectTechs);
-
-        if (techError) {
-          return { data: null, error: techError.message };
-        }
+          .insert(technologyIds.map((techId) => ({ project_id: id, technology_id: techId })));
+        if (techError) return { data: null, error: techError.message };
       }
     }
 
     return { data: normalizeProject(data), error: null };
   } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
 export async function deleteProject(id: number): Promise<ApiResponse<null>> {
   try {
     const supabase = await createClient();
-
-    // Delete project technologies first (foreign key constraint)
     await supabase.from("project_technologies").delete().eq("project_id", id);
-
-    // Delete project
     const { error } = await supabase.from("projects").delete().eq("id", id);
-
-    if (error) {
-      return { data: null, error: error.message };
-    }
-
+    if (error) return { data: null, error: error.message };
     return { data: null, error: null };
   } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
 // ==================== Certifications ====================
 
-export async function getCertifications(): Promise<
-  ApiResponse<Certification[]>
-> {
+export async function getCertifications(): Promise<ApiResponse<Certification[]>> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -581,16 +516,10 @@ export async function getCertifications(): Promise<
       .select("*")
       .order("issue_date", { ascending: false });
 
-    if (error) {
-      return { data: null, error: error.message };
-    }
-
+    if (error) return { data: null, error: error.message };
     return { data: data || [], error: null };
   } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
@@ -605,16 +534,10 @@ export async function createCertification(
       .select()
       .single();
 
-    if (error) {
-      return { data: null, error: error.message };
-    }
-
+    if (error) return { data: null, error: error.message };
     return { data, error: null };
   } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
+    return { data: null, error: error instanceof Error ? error.message : "Unknown error" };
   }
 }
 
@@ -777,7 +700,6 @@ export async function getPortfolioData(): Promise<ApiResponse<PortfolioData>> {
         getEducations(),
       ]);
 
-    // Check for any errors
     const errors = [
       profile.error,
       skills.error,
