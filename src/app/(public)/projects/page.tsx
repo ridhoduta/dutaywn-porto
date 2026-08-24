@@ -163,7 +163,16 @@ function ProjectCard({ project }: { project: ProjectWithTechnologies }) {
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-3 pt-2 border-t-2 border-primary/10 mt-auto">
+                <div className="flex flex-wrap gap-3 pt-2 border-t-2 border-primary/10 mt-auto">
+                    <Link
+                        href={`/projects/${project.id}`}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-secondary text-primary font-label-caps text-label-caps border-2 border-primary hover:bg-primary hover:text-secondary transition-all shadow-[3px_3px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]"
+                    >
+                        <span className="material-symbols-outlined text-[15px]">
+                            article
+                        </span>
+                        Detail
+                    </Link>
                     {project.demo_url && project.demo_url !== "#" && (
                         <a
                             href={project.demo_url}
