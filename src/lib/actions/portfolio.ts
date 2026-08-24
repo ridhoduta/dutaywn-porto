@@ -1175,7 +1175,7 @@ export async function createProjectResult(
   data: Omit<ProjectResult, "id" | "project_id" | "created_at" | "updated_at">
 ): Promise<ApiResponse<ProjectResult>> {
   try {
-    const validationError = requiredError("ProjectResult", [["title", data.title], ["description", data.description], ["metric_value", data.metric_value], ["metric_label", data.metric_label]]);
+    const validationError = requiredError("ProjectResult", [["title", data.title], ["description", data.description]]);
     if (validationError) return { data: null, error: validationError };
     const supabase = await createClient();
     const { data: row, error } = await supabase
