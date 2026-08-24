@@ -506,45 +506,25 @@ function ResultsSection({ results }: { results: ProjectResult[] }) {
   if (results.length === 0) return <EmptyPlaceholder />;
 
   return (
-    <div className="space-y-6">
-      {/* Metric highlights */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {results.map((r) => (
-          <div
-            key={r.id}
-            className="flex flex-col items-center justify-center p-5 border-2 border-primary text-center hover:bg-primary hover:text-secondary group transition-all duration-200 shadow-[4px_4px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-          >
-            <span className="font-display text-[32px] font-extrabold text-primary group-hover:text-secondary leading-none mb-1 transition-colors">
-              {r.metric_value || "—"}
-            </span>
-            <span className="font-label-caps text-label-caps text-primary/50 group-hover:text-secondary/70 transition-colors text-center leading-tight">
-              {r.metric_label || PLACEHOLDER}
-            </span>
+    <div className="space-y-4">
+      {results.map((r, idx) => (
+        <div
+          key={r.id}
+          className="flex gap-4 p-4 border-2 border-primary/20 hover:border-primary transition-colors duration-200"
+        >
+          <div className="flex-shrink-0 w-8 h-8 border-2 border-primary bg-secondary flex items-center justify-center font-display text-[13px] font-extrabold text-primary">
+            {idx + 1}
           </div>
-        ))}
-      </div>
-
-      {/* Detail list */}
-      <div className="space-y-4">
-        {results.map((r, idx) => (
-          <div
-            key={r.id}
-            className="flex gap-4 p-4 border-2 border-primary/10 hover:border-primary/30 transition-colors"
-          >
-            <div className="flex-shrink-0 w-8 h-8 border-2 border-primary bg-secondary flex items-center justify-center font-display text-[13px] font-extrabold text-primary">
-              {idx + 1}
-            </div>
-            <div>
-              <h3 className="font-headline-md text-[15px] font-bold text-primary mb-1">
-                {r.title || PLACEHOLDER}
-              </h3>
-              <p className="font-body-md text-[13px] text-primary/65 leading-relaxed">
-                {r.description || PLACEHOLDER}
-              </p>
-            </div>
+          <div>
+            <h3 className="font-headline-md text-[15px] font-bold text-primary mb-1">
+              {r.title || PLACEHOLDER}
+            </h3>
+            <p className="font-body-md text-[13px] text-primary/70 leading-relaxed">
+              {r.description || PLACEHOLDER}
+            </p>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

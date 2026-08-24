@@ -93,8 +93,6 @@ erDiagram
         bigint project_id FK
         text title
         text description
-        text metric_value
-        text metric_label
         integer sort_order
         timestamptz created_at
     }

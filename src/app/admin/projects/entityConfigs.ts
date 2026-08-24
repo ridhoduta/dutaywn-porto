@@ -169,7 +169,7 @@ export const entityConfigs: Record<string, EntityConfig> = {
   },
 
   results: {
-    title: "Results & Metrics",
+    title: "Results",
     icon: "📊",
     fields: [
       {
@@ -186,20 +186,6 @@ export const entityConfigs: Record<string, EntityConfig> = {
         placeholder: "Describe the result...",
         required: true,
         rows: 2,
-      },
-      {
-        name: "metric_value",
-        label: "Metric Value",
-        type: "text",
-        placeholder: "e.g., 50%",
-        required: true,
-      },
-      {
-        name: "metric_label",
-        label: "Metric Label",
-        type: "text",
-        placeholder: "e.g., faster load time",
-        required: true,
       },
     ],
   },

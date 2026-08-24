@@ -54,7 +54,7 @@ Konfigurasi 7 entity:
 | Designs | 🎨 | type* (select: wireframe/mockup/prototype/uml/flowchart), title*, description*, image_url* |
 | Features | ⭐ | title*, description*, image_url |
 | Testings | 🧪 | test_case*, expected_result*, actual_result*, status* (select: passed/failed/pending/skipped) |
-| Results | 📊 | title*, description*, metric_value*, metric_label* |
+| Results | 📊 | title*, description* |
 | Learnings | 📚 | content* |
 
 ## ✅ 5. Integrasi Dynamic Form Builder (Selesai)

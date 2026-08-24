@@ -166,8 +166,6 @@ export type ProjectResult = {
   project_id: number;
   title: string;
   description: string;
-  metric_value: string;
-  metric_label: string;
   sort_order: number;
   created_at: string;
   updated_at: string;
