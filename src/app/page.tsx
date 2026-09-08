@@ -169,14 +169,8 @@ const TICKER_ITEMS = [
   "PostgreSQL",
   "Prisma ORM",
   "Tailwind CSS",
-  "GraphQL",
-  "REST API",
-  "Docker",
-  "AWS",
   "Firebase",
   "Supabase",
-  "MongoDB",
-  "Redis",
   "React",
   "Next.js",
   "TypeScript",
@@ -186,14 +180,8 @@ const TICKER_ITEMS = [
   "PostgreSQL",
   "Prisma ORM",
   "Tailwind CSS",
-  "GraphQL",
-  "REST API",
-  "Docker",
-  "AWS",
   "Firebase",
   "Supabase",
-  "MongoDB",
-  "Redis",
 ];
 
 const SKILL_ICONS: Record<string, string> = {
@@ -218,10 +206,9 @@ const NAV_ITEMS = [
 ];
 
 const TYPING_WORDS = [
-  "Full Stack Developer",
+  "Frontend Developer",
   "Mobile Developer",
-  "UI/UX Enthusiast",
-  "Open Source Lover",
+  "Next.js Antusiast",
 ];
 
 // ─── Main Component ────────────────────────────────────────────────
