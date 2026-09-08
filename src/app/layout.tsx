@@ -21,9 +21,9 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Ridho - Full Stack Developer",
+  title: "Ridho - Frontend Developer",
   description:
-    "Portfolio Ridho, Full Stack Developer yang membangun website, aplikasi mobile, dan sistem informasi.",
+    "Portfolio Ridho, Frontend Developer yang membangun website dan aplikasi web serta aplikasi mobile.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
