@@ -456,8 +456,8 @@ export default function Home() {
               View Projects
             </a>
             <a
-              href="/cv/CV-Ridho-Frontend-Developer.pdf"
-              download="CV-Ridho-Frontend-Developer.pdf"
+              href="/cv/CV-Ridho-WebApps-Developer.pdf"
+              download="CV-Ridho-WebApps-Developer.pdf"
               className="flex items-center gap-2 px-8 py-4 bg-secondary text-primary border-2 border-primary font-label-caps text-label-caps hover:bg-primary hover:text-secondary transition-all shadow-[5px_5px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-[5px] hover:translate-y-[5px]"
             >
               <span className="material-symbols-outlined text-[18px]">
