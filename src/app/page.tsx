@@ -272,7 +272,8 @@ export default function Home() {
   const displayLocation = profile?.location || "Malang, Indonesia";
   const displayEmail = profile?.email || "hello@ridho.dev";
   const displayGithub = profile?.github_url || "#";
-  const displayLinkedin = profile?.linkedin_url || "https://www.instagram.com/dutaywn/";
+  const displayLinkedin =
+    profile?.linkedin_url || "https://www.instagram.com/dutaywn/";
 
   const heroFallbackImg =
     "https://lh3.googleusercontent.com/aida-public/AB6AXuCNdN0A0-4z4WnCFfYri40zJuvppWQJ6Qk0btFZ4DwfFbHGpX0r2jvkyROLYVSQDQz7OgTZRvqaSJZU71wkCp9g5S4SEr2W0shm6uN-3iTzvtgcbzdkdp0FlNZWwTZDXnrF2sNxL6sYHe_lPQ6Ow9fGO0FqF8ICysHynVNXZHB5olSQZSligXvkrTZUceEvq1Jn-cE09n5P6kN266qoNtk0NzlfNj3Sg4I291Ed8nUlLQve6P0E7SkP";
@@ -281,10 +282,10 @@ export default function Home() {
   const groupedSkills: Record<string, string[]> =
     skills.length > 0
       ? skills.reduce<Record<string, string[]>>((acc, s) => {
-        const cat = s.category || "General";
-        (acc[cat] ??= []).push(s.name);
-        return acc;
-      }, {})
+          const cat = s.category || "General";
+          (acc[cat] ??= []).push(s.name);
+          return acc;
+        }, {})
       : DEFAULT_SKILLS_GROUPED;
 
   const displayProjects = projects.length > 0 ? projects : DEFAULT_PROJECTS;
@@ -305,8 +306,9 @@ export default function Home() {
     <div className="bg-background text-primary min-h-screen overflow-x-hidden selection:bg-primary selection:text-secondary">
       {/* ═══════════════ NAV ═══════════════ */}
       <nav
-        className={`fixed w-full top-0 z-50 bg-background border-b-2 border-primary transition-shadow duration-300 ${scrolled ? "shadow-[0_4px_0px_0px_rgba(0,0,102,0.12)]" : ""
-          }`}
+        className={`fixed w-full top-0 z-50 bg-background border-b-2 border-primary transition-shadow duration-300 ${
+          scrolled ? "shadow-[0_4px_0px_0px_rgba(0,0,102,0.12)]" : ""
+        }`}
       >
         <div className="flex justify-between items-center w-full px-5 md:px-16 max-w-[1200px] mx-auto h-20">
           {/* Logo */}
@@ -332,10 +334,11 @@ export default function Home() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className={`font-label-caps text-label-caps px-4 py-2 border-b-2 transition-all duration-150 ${isActive
-                    ? "border-primary text-primary bg-secondary"
-                    : "border-transparent text-primary/70 hover:text-primary hover:border-primary"
-                    }`}
+                  className={`font-label-caps text-label-caps px-4 py-2 border-b-2 transition-all duration-150 ${
+                    isActive
+                      ? "border-primary text-primary bg-secondary"
+                      : "border-transparent text-primary/70 hover:text-primary hover:border-primary"
+                  }`}
                 >
                   {item.name}
                 </a>
@@ -366,10 +369,11 @@ export default function Home() {
 
         {/* Mobile menu */}
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen
-            ? "max-h-screen border-b-2 border-primary"
-            : "max-h-0"
-            }`}
+          className={`md:hidden overflow-hidden transition-all duration-300 ${
+            mobileMenuOpen
+              ? "max-h-screen border-b-2 border-primary"
+              : "max-h-0"
+          }`}
         >
           <div className="bg-background px-5 py-6 flex flex-col gap-1">
             {NAV_ITEMS.map((item) => (
@@ -426,8 +430,9 @@ export default function Home() {
             {STATS.map((stat, i) => (
               <div
                 key={stat.label}
-                className={`flex flex-col items-center py-4 px-2 ${i < STATS.length - 1 ? "border-r-2 border-primary" : ""
-                  }`}
+                className={`flex flex-col items-center py-4 px-2 ${
+                  i < STATS.length - 1 ? "border-r-2 border-primary" : ""
+                }`}
               >
                 <span className="font-display text-[22px] text-primary font-extrabold leading-none">
                   {stat.value}
@@ -528,16 +533,19 @@ export default function Home() {
             <div className="md:col-span-7 space-y-5 font-body-lg text-body-lg text-primary/80 leading-relaxed">
               <p>
                 Seorang <strong className="text-primary">{displayTitle}</strong>{" "}
-                yang berdedikasi tinggi dengan pengalaman dalam merancang,
-                mengembangkan, dan memelihara aplikasi web modern. Saya memiliki
-                ketertarikan yang kuat pada arsitektur perangkat lunak yang
-                bersih, kode yang efisien, dan antarmuka pengguna yang intuitif.
+                yang berfokus pada pengembangan aplikasi web modern, mulai dari
+                perancangan antarmuka hingga implementasi logika bisnis dan
+                integrasi backend. Saya memiliki ketertarikan pada arsitektur
+                aplikasi yang terstruktur, pengelolaan data yang efisien, serta
+                pengembangan sistem yang skalabel dan mudah dipelihara.
               </p>
               <p>
-                Pendekatan saya terhadap pengembangan selalu berpusat pada
-                pemecahan masalah bisnis nyata melalui teknologi. Saya menikmati
-                tantangan dalam membangun sistem yang kompleks namun
-                menyajikannya dengan cara yang sederhana dan mudah digunakan.
+                Dalam setiap pengembangan, saya mengutamakan pemahaman terhadap
+                kebutuhan pengguna dan proses bisnis untuk menghasilkan solusi
+                digital yang fungsional dan tepat guna. Saya menikmati proses
+                membangun aplikasi yang mengintegrasikan berbagai teknologi
+                menjadi sistem yang saling terhubung, efisien, dan mudah
+                digunakan.
               </p>
               {/* Social links */}
               <div className="flex gap-4 pt-2">
@@ -637,10 +645,11 @@ export default function Home() {
                   {items.map((name, i) => (
                     <span
                       key={name}
-                      className={`px-3 py-1.5 font-code text-code border-2 border-primary transition-colors ${i < 3
-                        ? "bg-primary text-secondary group-hover:bg-secondary group-hover:text-primary"
-                        : "bg-surface text-primary"
-                        }`}
+                      className={`px-3 py-1.5 font-code text-code border-2 border-primary transition-colors ${
+                        i < 3
+                          ? "bg-primary text-secondary group-hover:bg-secondary group-hover:text-primary"
+                          : "bg-surface text-primary"
+                      }`}
                     >
                       {name}
                     </span>
@@ -665,7 +674,8 @@ export default function Home() {
               {displayProjects.map((proj) => {
                 const projFallbackImg =
                   "https://lh3.googleusercontent.com/aida-public/AB6AXuCGnndHOxQMC9P7kHYR-NCziQOHTYxPNDH6FyixbGFqO_KRMF-t1EUHAmPe6hni1wsTKXjlYA5YbhwHVgT7oPXz8HDqW6dqDoUkilL2QmjAz4zcwjpWUIkmkltP2Js7aE1zKglyU7a4vibtXU1GcvadWQmYAGRCc8CTmIapikW1CSlTDnul-hbI-R2lXBSj7S9vo_SSzOnffaCk07sRyqxgBfPGb-sm33DNXtUqPahSpKe_TNs_helP";
-                const imgUrl = (proj.image_urls && proj.image_urls[0]) || projFallbackImg;
+                const imgUrl =
+                  (proj.image_urls && proj.image_urls[0]) || projFallbackImg;
 
                 return (
                   <div
