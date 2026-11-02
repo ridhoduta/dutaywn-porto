@@ -31,6 +31,18 @@ export default function ProjectDetailPage({
   // ── Loading state ──
   if (loading) return <ProjectDetailSkeleton />;
 
+  // ── Build visible sections based on data availability ──
+  const visibleSections = ["overview"]; // Overview always visible
+  if (project && !loading && !error) {
+    if (project.problems && project.problems.length > 0) visibleSections.push("problems");
+    if (project.solutions && project.solutions.length > 0) visibleSections.push("solutions");
+    if (project.designs && project.designs.length > 0) visibleSections.push("designs");
+    if (project.features && project.features.length > 0) visibleSections.push("features");
+    if (project.testings && project.testings.length > 0) visibleSections.push("testing");
+    if (project.results && project.results.length > 0) visibleSections.push("results");
+    if (project.learnings && project.learnings.length > 0) visibleSections.push("learnings");
+  }
+
   // ── Error / not found ──
   if (error || !project) {
     return (
@@ -113,7 +125,7 @@ export default function ProjectDetailPage({
       <div className="pt-20 max-w-[1200px] mx-auto px-5 md:px-16">
         <div className="flex gap-12 relative">
           {/* ── Sticky TOC sidebar ── */}
-          <TocSidebar />
+          <TocSidebar visibleSections={visibleSections} />
 
           {/* ── Main Article ── */}
           <main className="flex-1 min-w-0 pb-32 space-y-16 pt-10">
@@ -121,39 +133,53 @@ export default function ProjectDetailPage({
             <HeroSection project={project} />
 
             {/* ── Problems ── */}
-            <Section id="problems" icon="report_problem" label="Latar Belakang Masalah" number="01">
-              <ProblemsSection problems={project.problems} />
-            </Section>
+            {project.problems && project.problems.length > 0 && (
+              <Section id="problems" icon="report_problem" label="Latar Belakang Masalah" number="01">
+                <ProblemsSection problems={project.problems} />
+              </Section>
+            )}
 
             {/* ── Solutions ── */}
-            <Section id="solutions" icon="lightbulb" label="Solusi yang Diterapkan" number="02">
-              <SolutionsSection solutions={project.solutions} />
-            </Section>
+            {project.solutions && project.solutions.length > 0 && (
+              <Section id="solutions" icon="lightbulb" label="Solusi yang Diterapkan" number="02">
+                <SolutionsSection solutions={project.solutions} />
+              </Section>
+            )}
 
             {/* ── Designs ── */}
-            <Section id="designs" icon="design_services" label="Desain & Arsitektur" number="03">
-              <DesignsSection designs={project.designs} />
-            </Section>
+            {project.designs && project.designs.length > 0 && (
+              <Section id="designs" icon="design_services" label="Desain & Arsitektur" number="03">
+                <DesignsSection designs={project.designs} />
+              </Section>
+            )}
 
             {/* ── Features ── */}
-            <Section id="features" icon="star" label="Fitur Utama" number="04">
-              <FeaturesSection features={project.features} />
-            </Section>
+            {project.features && project.features.length > 0 && (
+              <Section id="features" icon="star" label="Fitur Utama" number="04">
+                <FeaturesSection features={project.features} />
+              </Section>
+            )}
 
             {/* ── Testing ── */}
-            <Section id="testing" icon="bug_report" label="Pengujian" number="05">
-              <TestingSection testings={project.testings} />
-            </Section>
+            {project.testings && project.testings.length > 0 && (
+              <Section id="testing" icon="bug_report" label="Pengujian" number="05">
+                <TestingSection testings={project.testings} />
+              </Section>
+            )}
 
             {/* ── Results ── */}
-            <Section id="results" icon="bar_chart" label="Hasil & Dampak" number="06">
-              <ResultsSection results={project.results} />
-            </Section>
+            {project.results && project.results.length > 0 && (
+              <Section id="results" icon="bar_chart" label="Hasil & Dampak" number="06">
+                <ResultsSection results={project.results} />
+              </Section>
+            )}
 
             {/* ── Learnings ── */}
-            <Section id="learnings" icon="school" label="Pembelajaran" number="07">
-              <LearningsSection learnings={project.learnings} />
-            </Section>
+            {project.learnings && project.learnings.length > 0 && (
+              <Section id="learnings" icon="school" label="Pembelajaran" number="07">
+                <LearningsSection learnings={project.learnings} />
+              </Section>
+            )}
 
             {/* ── Back button ── */}
             <div className="pt-8 border-t-2 border-primary/20">

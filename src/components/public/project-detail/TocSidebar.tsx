@@ -11,10 +11,19 @@ export const TOC_ITEMS = [
   { id: "learnings", icon: "school", label: "Learnings" },
 ];
 
-export function TocSidebar() {
+interface TocSidebarProps {
+  visibleSections?: string[];
+}
+
+export function TocSidebar({ visibleSections }: TocSidebarProps) {
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Filter TOC items based on visible sections
+  const filteredItems = visibleSections
+    ? TOC_ITEMS.filter((item) => visibleSections.includes(item.id))
+    : TOC_ITEMS;
 
   return (
     <aside className="hidden xl:block w-48 flex-shrink-0">
@@ -22,7 +31,7 @@ export function TocSidebar() {
         <p className="font-label-caps text-label-caps text-primary/40 mb-4">
           IN THIS PAGE
         </p>
-        {TOC_ITEMS.map((item) => (
+        {filteredItems.map((item) => (
           <button
             key={item.id}
             onClick={() => scrollTo(item.id)}

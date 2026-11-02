@@ -75,6 +75,7 @@ const DEFAULT_SKILLS_GROUPED = {
 const DEFAULT_PROJECTS = [
   {
     id: 1,
+    slug: "e-commerce-platform",
     title: "E-Commerce Platform",
     description:
       "A full-stack e-commerce solution with real-time inventory management, payment gateway integration, and admin dashboard.",
@@ -91,6 +92,7 @@ const DEFAULT_PROJECTS = [
   },
   {
     id: 2,
+    slug: "mobile-banking-app",
     title: "Mobile Banking App",
     description:
       "Secure and intuitive mobile banking experience featuring biometric authentication, real-time transactions, and spending analytics.",
@@ -743,7 +745,7 @@ export default function Home() {
                         {proj.description}
                       </p>
                       {/* Tech badges */}
-                      <div className="flex flex-wrap gap-2 mt-auto">
+                      <div className="flex flex-wrap gap-2 mb-4">
                         {proj.technologies?.map((tech) => (
                           <span
                             key={tech.id}
@@ -753,6 +755,16 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      {/* View Details Button */}
+                      <Link
+                        href={`/projects/${proj.slug || proj.id}`}
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-secondary text-primary border-2 border-primary font-label-caps text-label-caps hover:bg-primary hover:text-secondary transition-all shadow-[4px_4px_0px_0px_rgba(0,0,102,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] mt-auto"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          article
+                        </span>
+                        View Details
+                      </Link>
                     </div>
                   </div>
                 );
