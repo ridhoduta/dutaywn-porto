@@ -413,6 +413,7 @@ import {
   deleteProjectLearning,
   reorderProjectLearnings,
   getProjectWithDetails,
+  getProjectBySlug,
 } from "@/lib/actions/portfolio";
 
 type ApiResult<T> = { data: T | null; error: string | null };
