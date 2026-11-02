@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import Link from "next/link";
-import { useProjectWithDetails } from "@/hooks/usePortfolio";
+import { useProjectWithDetailsBySlug } from "@/hooks/usePortfolio";
 import {
   Section,
   HeroSection,
@@ -20,13 +20,10 @@ import {
 export default function ProjectDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }) {
-  const { id } = use(params);
-  const projectId = Number(id);
-  const { project, loading, error } = useProjectWithDetails(
-    isNaN(projectId) ? null : projectId
-  );
+  const { slug } = use(params);
+  const { project, loading, error } = useProjectWithDetailsBySlug(slug);
 
   // ── Loading state ──
   if (loading) return <ProjectDetailSkeleton />;

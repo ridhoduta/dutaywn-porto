@@ -567,6 +567,70 @@ function useProjectDetailsRealtime(projectId: number | null) {
   return { project, loading, error, refetch: fetch };
 }
 
+function useProjectDetailsBySlug(slug: string | null) {
+  const [project, setProject] = useState<ProjectWithDetails | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = useCallback(async () => {
+    if (!slug) {
+      setProject(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await getProjectBySlug(slug);
+      if (result.error) throw new Error(result.error);
+      if (!result.data) throw new Error("Project not found");
+      
+      // Fetch full details with all related data
+      const detailsResult = await getProjectWithDetails(result.data.id);
+      if (detailsResult.error) throw new Error(detailsResult.error);
+      setProject(detailsResult.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    void Promise.resolve().then(fetch);
+
+    if (!slug) return;
+
+    // Subscribe to realtime changes
+    const tables = [
+      "projects",
+      "project_technologies",
+      "project_problems",
+      "project_solutions",
+      "project_designs",
+      "project_features",
+      "project_testings",
+      "project_results",
+      "project_learnings",
+    ];
+
+    const channels = tables.map((table) =>
+      supabaseClient
+        .channel(`${table}-details-slug-${slug}`)
+        .on("postgres_changes", { event: "*", schema: "public", table }, fetch)
+        .subscribe()
+    );
+
+    return () => {
+      channels.forEach((channel) => {
+        supabaseClient.removeChannel(channel);
+      });
+    };
+  }, [fetch, slug]);
+
+  return { project, loading, error, refetch: fetch };
+}
+
 export function useProjectProblems(projectId: number | null) {
   const result = useProjectChildEntities<ProjectProblem>("project_problems", projectId, getProjectProblems);
   return { ...result, problems: result.data };
@@ -604,6 +668,10 @@ export function useProjectLearnings(projectId: number | null) {
 
 export function useProjectWithDetails(projectId: number | null) {
   return useProjectDetailsRealtime(projectId);
+}
+
+export function useProjectWithDetailsBySlug(slug: string | null) {
+  return useProjectDetailsBySlug(slug);
 }
 
 export function useCreateProjectProblem() {
